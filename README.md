@@ -22,16 +22,17 @@ Requires UART read support -
 
 
 Supplies the following command list:
-    Command Line parser, Aug 13 2024
-    Enter "help" or "?" for list of commands
-    >help
-    Help - command list
-    Command     Comment
-    ?           display help menu
-    help        display help menu
-    add         add <number> <number>
-    id          unique ID
-    info        processor info
-    
-    
-    >
+
+        Command Line parser, Aug 13 2024
+        Enter "help" or "?" for list of commands
+        >help
+        Help - command list
+        Command     Comment
+        ?           display help menu
+        help        display help menu
+        add         add <number> <number>
+        id          unique ID
+        info        processor info
+        
+        
+        >
