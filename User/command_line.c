@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <stdint.h> // uint8_t
 #include "command_line.h"
-//#include "main.h"   // HAL functions and defines
+#include "i2c.h"
 
 // Typedefs
 typedef struct {
@@ -33,6 +33,8 @@ const COMMAND_ITEM cmd_table[] = {
     {"add",       "add <number> <number>",                        3, cl_add},
     {"id",        "unique ID",                                    1, cl_id},
     {"info",      "processor info",                               1, cl_info},
+    {"i2cscan",   "scan I2C1, showing active devices",            1, cl_i2cscan},
+    {"temp",      "access external DS3231, read temperature",     1, cl_ds3231_temperature},
     //{"reset",     "reset processor",                              1, cl_reset},
     //{"timer",     "timer test - testing 50ms delay",              1, cl_timer},
     {NULL,NULL,0,NULL}, /* end of table */
@@ -233,6 +235,50 @@ int cl_info(void) {
     return 0;
 }
 
+// command line interface for i2c_scan()
+int cl_i2cscan(void)
+{
+    i2c_scan();
+    return 0;
+}
+
+#define I2C_ADDRESS_DS3231  0x68   // 7-bit I2C address for DS3231
+
+// If DS3231 present, poll and display the temperature each second
+int cl_ds3231_temperature(void)
+{
+    if(I2C_ERROR_SUCCESS != i2c_device_detect(I2C_ADDRESS_DS3231)) {
+        printf("DS3231 Not Found !\n");
+        return I2C_ERROR_ACK;
+    }
+    printf("%s, Continuously read DS3231 temperature until reset\n",__func__);
+    while(1) {
+        // Force a temperature conversion, write 0x3C to control register, 0x0E (set CONV bit, BIT5)
+        uint8_t reg=0x0E;
+        uint8_t control_reg[2] = {0x0E,0x3C};
+        i2c_write(I2C_ADDRESS_DS3231,control_reg,sizeof(control_reg));
+
+        // Read temperature registers, 0x11, 0x12
+        reg=0x11; // Temperature, MSB (Celcius)
+        uint8_t temp_reg[2] = {0,0};
+        i2c_write(I2C_ADDRESS_DS3231,&reg,sizeof(reg));
+        i2c_read(I2C_ADDRESS_DS3231, temp_reg, sizeof(temp_reg));
+        //printf("temp_reg0: %02X, temp_reg1: %02X\n",temp_reg[0],temp_reg[1]);
+        // Combine registers into int16_t
+        uint16_t u_temp_c = ((uint16_t)temp_reg[0]<<8) + ((uint16_t)temp_reg[1]);
+        int16_t temp_c = (int16_t)u_temp_c;
+        //printf("u_temp_c: %04X\n",u_temp_c);
+        temp_c /= 64; // convert to 1/4 degree C units
+        printf("Temp: %d %d/4C\n",temp_c/4,temp_c%4); // This display method only works for positive temperature values
+
+        // Convert to Fahrenheit
+        //int16_t temp_f = (((int16_t)temp_msb * 18) / 10) + 32 ; // multiply by 1.8, add 32
+        //printf("Temp: %dF\n",temp_f);
+        Delay_Ms(1000);
+    } // while
+}
+
+
 #if 0
 // Return appropriate error code string
 // Yes, we could just return the HAL strings vs copy them...
@@ -288,4 +334,3 @@ int cl_timer(void)
     return 0;
 }
 #endif
-
