@@ -1,10 +1,10 @@
 /********************************** (C) COPYRIGHT *******************************
  * File Name          : main.c
- * Author             : WCH
+ * Author             : Jim Merkle
  * Version            : V1.0.0
- * Date               : 2022/08/08
- * Description        : Main program body.
- * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Date               : 2024/08/22
+ * Description        : Initialize command line and loop for command line input
+ * Copyright (c) 2024 Jim Merkle
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
@@ -23,7 +23,6 @@
 
 // Function Prototypes
 extern void USART_Printf_Init2(uint32_t baudrate); // debug2.c
-extern int __io_getchar(void); // debug2.c
 
 /* Defines */
 
@@ -41,8 +40,7 @@ void GPIO_Toggle_INIT(void)
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;  // initial value
-    //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;    // NOTE! Used by USART RX
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;  // toggle PD0
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOD, &GPIO_InitStructure);
@@ -61,13 +59,13 @@ int main(void)
 
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     Delay_Init();
-    USART_Printf_Init2(115200);
-    printf("SystemClk:%d\r\n", SystemCoreClock);
+    USART_Printf_Init2(115200); // Use alternate init function that includes RX pin
+    printf("SystemClk:%d\n", SystemCoreClock);
 
     //printf("IIC Host mode, 100Kbps\r\n");
     IIC_Init( 100000, I2C_SELF_ADDRESS); // 80000 creates a nice looking 80KHz, 100K looks good too
 
-    //printf("command_line\r\n");
+    //printf("init toggle LED\n");
     GPIO_Toggle_INIT();
 
     // Initialize command line module
@@ -77,7 +75,6 @@ int main(void)
     {
         cl_loop(); // command line, check for input character
         Delay_Ms(40);
-        GPIO_WriteBit(GPIOD, GPIO_Pin_0, (i == 0) ? (i = Bit_SET) : (i = Bit_RESET));
-        //GPIO_WriteBit(GPIOD, GPIO_Pin_6, (i == 0) ? (i = Bit_SET) : (i = Bit_RESET)); // Use PD6
+        GPIO_WriteBit(GPIOD, GPIO_Pin_0, (i == 0) ? (i = Bit_SET) : (i = Bit_RESET)); // toggle PD0
     }
 }
