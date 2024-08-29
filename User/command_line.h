@@ -54,6 +54,10 @@ int cl_id(void);
 int cl_info(void);
 int cl_reset(void);
 int cl_timer(void);
+int cl_read(void);
+int cl_clocks(void);
+int cl_reset(void);
+int cl_reset_cause(void);
 int cl_i2cscan(void);
 int cl_ds3231_temperature(void);
 

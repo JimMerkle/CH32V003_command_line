@@ -18,6 +18,7 @@
 #include <stdint.h> // uint8_t
 #include "command_line.h"
 #include "i2c.h"
+#include "core_riscv.h"
 
 // Typedefs
 typedef struct {
@@ -33,9 +34,12 @@ const COMMAND_ITEM cmd_table[] = {
     {"add",       "add <number> <number>",                        3, cl_add},
     {"id",        "unique ID",                                    1, cl_id},
     {"info",      "processor info",                               1, cl_info},
+    {"read",      "read <address>, display 32-bit value",         2, cl_read},
+    {"clocks",    "display clock control registers",              1, cl_clocks},
+    {"reset",     "reset processor",                              1, cl_reset},
+    {"resetcause","display reset cause flag",                     1, cl_reset_cause},
     {"i2cscan",   "scan I2C1, showing active devices",            1, cl_i2cscan},
     {"temp",      "access external DS3231, read temperature",     1, cl_ds3231_temperature},
-    //{"reset",     "reset processor",                              1, cl_reset},
     //{"timer",     "timer test - testing 50ms delay",              1, cl_timer},
     {NULL,NULL,0,NULL}, /* end of table */
 };
@@ -55,8 +59,7 @@ void cl_setup(void) {
 }
 
 // Externals
-int __io_getchar(void);   // main.c
-//int __io_putchar(int ch); // main.c
+int __io_getchar(void);   // debug2.c
 
 // Check for data available from USART interface.  If none present, just return.
 // If data available, process it (add it to character buffer if appropriate)
@@ -235,6 +238,72 @@ int cl_info(void) {
     return 0;
 }
 
+// Other things to add...
+// MCO on PC4 pin
+
+// Read and display memory/register value
+int cl_read(void)
+{
+    char *endptr;
+    uint32_t address = (uint32_t) strtol(argv[1], &endptr, 16); // allow user to use decimal or hex
+    if (endptr == argv[1]) {
+        printf("Invalid hex address\n");
+        return 1;
+    }
+    uint32_t value = *(uint32_t *)address;
+    printf("[%08X]: %08X\n",address,value);
+
+    return 0;
+}
+
+// Display values of clock control registers
+int cl_clocks(void)
+{
+    printf("RCC->CTLR : %08X\n",RCC->CTLR);
+    printf("RCC->CFGR0: %08X\n",RCC->CFGR0);
+
+    return 0;
+}
+
+// Reset the processor
+//6.5.2.6 PFIC interrupt configuration register (PFIC_CFGR)
+//Offset address: 0x48
+//[31:16] KEYCODE WO
+//KEY1 = 0xFA05.
+//KEY2 = 0xBCAF.
+//KEY3 = 0xBEEF.
+//[15:8] Reserved RO Reserved 0
+//7 RESETSYS WO System reset
+int cl_reset(void) {
+    printf("%s\n",__func__);
+    Delay_Ms(10);
+    PFIC->CFGR = NVIC_KEY3 | 0x80;
+    return 0;
+}
+
+// Display reset cause
+// Control/Status register (RCC_RSTSCKR)
+// 31 LPWRRSTF RO, Low-power reset flag.
+// 30 WWDGRSTF RO, Window watchdog reset flag.
+// 29 IWDGRSTF RO, Independent watchdog reset flag.
+// 28 SFTRSTF  RO, Software reset flag.
+// 27 PORRSTF  RO, Power-up/power-down reset flag.
+// 26 PINRSTF  RO, External manual reset (NRST pin) flag.
+int cl_reset_cause(void)
+{
+    printf("Reset cause: ");
+    if(RCC->RSTSCKR & RCC_LPWRRSTF) printf("LPWRRSTF\n");
+    if(RCC->RSTSCKR & RCC_WWDGRSTF) printf("WWDGRSTF\n");
+    if(RCC->RSTSCKR & RCC_IWDGRSTF) printf("IWDGRSTF\n");
+    if(RCC->RSTSCKR & RCC_SFTRSTF)  printf("SFTRSTF\n");
+    if(RCC->RSTSCKR & RCC_PORRSTF)  printf("PORRSTF\n");
+    if(RCC->RSTSCKR & RCC_PINRSTF)  printf("PINRSTF\n");
+
+    // Clear reset flags for next time
+    RCC->RSTSCKR |= RCC_RMVF;
+    return 0;
+}
+
 // command line interface for i2c_scan()
 int cl_i2cscan(void)
 {
@@ -305,13 +374,6 @@ char * PrintHalStatus(int status)
     return s_status;
 } // PrintHalStatus()
 
-// Reset the processor
-int cl_reset(void) {
-    NVIC_SystemReset(); // CMSIS Cortex-M3 function - see Drivers/CMSIS/Include/core_cm3.h
-    while (1) ; // wait here until reset completes
-
-    return 0;
-}
 
 // Perform a timer2 test.
 // Timer2 is a 16-bit free-running timer with pre-scale counter.
