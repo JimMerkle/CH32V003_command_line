@@ -259,13 +259,38 @@ int cl_read(void)
 // Display values of clock control registers
 int cl_clocks(void)
 {
-    printf("RCC->CTLR : %08X\n",RCC->CTLR);
-    printf("RCC->CFGR0: %08X\n",RCC->CFGR0);
+    printf(COLOR_GREEN "RCC->CTLR : %08X" COLOR_RESET "\n",RCC->CTLR);
+    if(RCC->CTLR & RCC_PLLRDY)  printf("PLL clock ready\n");
+    if(RCC->CTLR & RCC_PLLON)   printf("PLL enable\n");
+    if(RCC->CTLR & RCC_CSSON)   printf("Clock Security System enable\n");
+    if(RCC->CTLR & RCC_HSEBYP)  printf("HSE bypass\n");
+    if(RCC->CTLR & RCC_HSERDY)  printf("HSE ready\n");
+    if(RCC->CTLR & RCC_HSEON)   printf("HSE enable\n");
+
+    uint32_t hsical = RCC->CTLR & RCC_HSICAL;
+    if(hsical){
+        hsical >>= 8;
+        printf("HSI CAL: %02X\n",hsical); }
+
+    uint32_t hsitrim = RCC->CTLR & RCC_HSITRIM;
+        if(hsitrim){
+            hsitrim >>= 3;
+            printf("HSI TRIM: %02X\n",hsitrim); }
+
+    if(RCC->CTLR & RCC_HSIRDY)  printf("HSI ready\n");
+    if(RCC->CTLR & RCC_HSION)   printf("HSI enable\n");
+
+    printf(COLOR_GREEN "RCC->CFGR0: %08X" COLOR_RESET "\n",RCC->CFGR0);
+    uint32_t sws = RCC->CFGR0 & RCC_SWS;
+    printf("System clock: ");
+    if(RCC_SWS_HSI == sws ) printf("HSI\n");
+    if(RCC_SWS_HSE == sws ) printf("HSE\n");
+    if(RCC_SWS_PLL == sws ) printf("PLL\n");
 
     return 0;
 }
 
-// Reset the processor
+// Reset the processor via software reset
 //6.5.2.6 PFIC interrupt configuration register (PFIC_CFGR)
 //Offset address: 0x48
 //[31:16] KEYCODE WO
