@@ -21,10 +21,10 @@
 #include <stdio.h>
 
 /* UART Printf Definition */
-#define DEBUG_UART1_NoRemap   1  //Tx-PD5
-#define DEBUG_UART1_Remap1    2  //Tx-PD0
-#define DEBUG_UART1_Remap2    3  //Tx-PD6
-#define DEBUG_UART1_Remap3    4  //Tx-PC0
+#define DEBUG_UART1_NoRemap   1  //Tx-PD5  Rx-PD6
+#define DEBUG_UART1_Remap1    2  //Tx-PD0  Rx-PD1
+#define DEBUG_UART1_Remap2    3  //Tx-PD6  Rx-PD5
+#define DEBUG_UART1_Remap3    4  //Tx-PC0  Rx-PC1
 
 /* DEBUG UATR Definition */
 #ifndef DEBUG

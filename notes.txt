@@ -1,0 +1,13 @@
+notes.txt:
+
+SYSTICK Timer (System Timer) See Reference Manual, section 6.5.4 "STK register description"
+By default, STK->CTLK, STCLK bit, Bit2, is cleared at reset, setting the SYSTICK input clock to HCLK/8 for time base.
+
+Delay_Us() and Delay_Ms() work as follows:
+1) Clear CNTIF flag in STK->SR, bit0
+2) Load compare register, STK->CMPLR, with number of SYSTICK counts to delay (HCLK/8)
+3) Clear SYSTICK counter, STK->CNTL = 0
+4) Start SYSTICK counter by setting STE, bit0 in CTLR
+5) Wait for CNTIF flag to become set in the STK->SR
+6) Stop SYSTICK counter by clearing STE, bit0 in CTLR
+
