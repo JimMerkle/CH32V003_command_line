@@ -59,7 +59,7 @@ void cl_setup(void) {
 }
 
 // Externals
-int __io_getchar(void);   // debug2.c
+extern int USART_ReadByte(void);   // debug2.c
 
 // Check for data available from USART interface.  If none present, just return.
 // If data available, process it (add it to character buffer if appropriate)
@@ -71,7 +71,7 @@ void cl_loop(void)
     // Spin, reading characters until EOF character is received (no data), buffer is full, or
     // a <line feed> character is received.  Null terminate the global string, don't return the <LF>
     while(1) {
-      c = __io_getchar();
+      c = USART_ReadByte();
       switch(c) {
           case EOF:
               return; // non-blocking - return

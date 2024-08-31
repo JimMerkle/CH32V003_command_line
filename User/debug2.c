@@ -50,7 +50,7 @@ void USART_Printf_Init2(uint32_t baudrate)
 }
 
 /*********************************************************************
- * @fn      __io_getchar
+ * @fn      USART_ReadByte
  *
  * @brief   Check UART1 for Receive Not Empty
  *          If no data available, return EOF, else, return data byte.
@@ -59,7 +59,7 @@ void USART_Printf_Init2(uint32_t baudrate)
  *          else 8-bit serial character read from UART
  */
 __attribute__((used))
-int __io_getchar(void)
+int USART_ReadByte(void)
 {
     if( USART_GetFlagStatus(USART1, USART_FLAG_RXNE))
         return USART_ReceiveData(USART1);

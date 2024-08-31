@@ -38,7 +38,7 @@ extern char buffer[]; // holds command strings from user
 extern char * argv[]; // pointers into buffer
 extern int argc; // number of words (command & arguments)
 extern int __io_putchar(int ch);
-extern int __io_getchar(void);
+extern int USART_ReadByte(void);
 
 // Forward declarations
 int cl_isWhiteSpace(char c);

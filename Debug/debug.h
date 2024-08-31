@@ -26,7 +26,7 @@
 #define DEBUG_UART1_Remap2    3  //Tx-PD6  Rx-PD5
 #define DEBUG_UART1_Remap3    4  //Tx-PC0  Rx-PC1
 
-/* DEBUG UATR Definition */
+/* DEBUG USART Definition */
 #ifndef DEBUG
 #define DEBUG   DEBUG_UART1_NoRemap
 #endif
