@@ -2,7 +2,7 @@
 
 Example Command Line project for the CH32V003
 
-debug.c, USART_Printf_Init() required modifications for USART receive:
+### debug.c, USART_Printf_Init() required modifications for USART receive:
 
         // See debug2.c for modified version, USART_Printf_Init2()
         // USART RX - input pin: D6
@@ -12,7 +12,7 @@ debug.c, USART_Printf_Init() required modifications for USART receive:
         // Need BOTH TX and RX:
         USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 
-Requires UART read support, debug2.c
+### Requires UART read support, debug2.c
 
         __attribute__((used))
         int __io_getchar(void)
@@ -24,7 +24,7 @@ Requires UART read support, debug2.c
         }
         
 
-Supplies the following command list:
+### Supplies the following command list:
 
         Command Line parser, Aug 13 2024
         Enter "help" or "?" for list of commands
@@ -45,7 +45,7 @@ Supplies the following command list:
         
         >
 
-Example "clocks: command output:
+### Example "clocks: command output:
 
         >clocks
         RCC->CTLR : 03003F83
@@ -60,7 +60,7 @@ Example "clocks: command output:
         
         >
 
-Scan I2C1 Bus, displaying peripherals present
+### Scan I2C1 Bus, displaying peripherals present
             
         >i2cscan
              0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
