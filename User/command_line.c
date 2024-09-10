@@ -38,9 +38,9 @@ const COMMAND_ITEM cmd_table[] = {
     {"clocks",    "display clock control registers",              1, cl_clocks},
     {"reset",     "reset processor",                              1, cl_reset},
     {"resetcause","display reset cause flag",                     1, cl_reset_cause},
+    {"servo",     "0.8ms, 1.5ms, 2.2ms pulse widths",             1, cl_servo},
     {"i2cscan",   "scan I2C1, showing active devices",            1, cl_i2cscan},
     {"temp",      "access external DS3231, read temperature",     1, cl_ds3231_temperature},
-    //{"timer",     "timer test - testing 50ms delay",              1, cl_timer},
     {NULL,NULL,0,NULL}, /* end of table */
 };
 
@@ -329,6 +329,91 @@ int cl_reset_cause(void)
     return 0;
 }
 
+/*
+ *@Note
+ PWM_MODE1: ccp defines active high pulse width
+ PWM_MODE2: ccp defines active low pulse width
+
+ For servo control, MODE1 is preferred.
+   Loading larger values for ccp creates larger active high pulse width
+*/
+
+/* PWM Output Mode Definition */
+#define PWM_MODE1   0
+#define PWM_MODE2   1
+
+/* PWM Output Mode Selection */
+#define PWM_MODE PWM_MODE1    //
+//#define PWM_MODE PWM_MODE2
+
+/*********************************************************************
+ * @fn      TIM1_OutCompare_Init
+ *
+ * @brief   Initializes TIM1 output compare.
+ *          Use PD2 for PWM output
+ *
+ * @param   arr - the period value.
+ *          psc - the prescaler value.
+ *          ccp - the pulse value.
+ *
+ * @return  none
+ */
+void TIM1_PWMOut_Init(u16 arr, u16 psc, u16 ccp)
+{
+    GPIO_InitTypeDef GPIO_InitStructure={0};
+    TIM_OCInitTypeDef TIM_OCInitStructure={0};
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure={0};
+
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD | RCC_APB2Periph_TIM1, ENABLE );
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init( GPIOD, &GPIO_InitStructure );
+
+    TIM_TimeBaseInitStructure.TIM_Period = arr;
+    TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
+    TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseInit( TIM1, &TIM_TimeBaseInitStructure);
+
+#if (PWM_MODE == PWM_MODE1)
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+
+#elif (PWM_MODE == PWM_MODE2)
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
+
+#endif
+
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = ccp;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+    TIM_OC1Init( TIM1, &TIM_OCInitStructure );
+
+    TIM_CtrlPWMOutputs(TIM1, ENABLE );
+    TIM_OC1PreloadConfig( TIM1, TIM_OCPreload_Disable );
+    TIM_ARRPreloadConfig( TIM1, ENABLE );
+    TIM_Cmd( TIM1, ENABLE );
+}
+
+// Create 50Hz (20.0ms) pulse train, with 1.0ms, 1.5ms, 2.0ms pulse width
+int cl_servo(void)
+{
+    // Initialize PWM for 50Hz (20ms period) 0.8ms high PWM
+    TIM1_PWMOut_Init( 20000, 48-1, 800); // 0.8ms (1us units for ccp)
+    printf("TIM1->CH1CVR: %u\n",TIM1->CH1CVR);
+    Delay_Ms(2000);
+
+    TIM1->CH1CVR = 1500; // 1.5ms
+    printf("TIM1->CH1CVR: %u\n",TIM1->CH1CVR);
+    Delay_Ms(2000);
+
+    TIM1->CH1CVR = 2200; // 2.2ms
+    printf("TIM1->CH1CVR: %u\n",TIM1->CH1CVR);
+    //Delay_Ms(2000);
+    return 0;
+}
+
 // command line interface for i2c_scan()
 int cl_i2cscan(void)
 {
@@ -372,52 +457,3 @@ int cl_ds3231_temperature(void)
     } // while
 }
 
-
-#if 0
-// Return appropriate error code string
-// Yes, we could just return the HAL strings vs copy them...
-char * PrintHalStatus(int status)
-{
-    static char s_status[20];
-    switch(status) {
-        case HAL_OK:
-          sprintf(s_status,"HAL_OK");
-          break;
-        case HAL_ERROR:
-          sprintf(s_status,"HAL_ERROR");
-          break;
-        case HAL_BUSY:
-          sprintf(s_status,"HAL_BUSY");
-          break;
-        case HAL_TIMEOUT:
-          sprintf(s_status,"HAL_TIMEOUT");
-          break;
-        default:
-          sprintf(s_status,"%d",status);
-          break;
-    } // switch
-    return s_status;
-} // PrintHalStatus()
-
-
-// Perform a timer2 test.
-// Timer2 is a 16-bit free-running timer with pre-scale counter.
-// Is the us timer tracking System Ticks?
-// Timer2 is configured to update each micro-second
-// Alternatively, if used a GPIO, we could toggle a pin after X micro-seconds
-int cl_timer(void)
-{
-    printf("%s(), Timing HAL_Delay(50)\n",__func__);
-    volatile TIM_TypeDef *TIMx = TIM2; // Use timer 2
-    uint32_t start_ticks = HAL_GetTick();
-    uint32_t start_us = TIMx->CNT; // read us hardware timer
-    HAL_Delay(50); // delay 50us
-    uint32_t stop_us = TIMx->CNT; // read us hardware timer
-    uint32_t stop_ticks = HAL_GetTick();
-    // Report results
-    printf("HAL_GetTick() time: %lu ms\n",stop_ticks-start_ticks);
-    if(stop_us < start_us) stop_us += 1<<16; // roll-over, add 16-bit roll-over offset
-    printf("TIMx->CNT time: %lu us\n",stop_us - start_us);
-    return 0;
-}
-#endif

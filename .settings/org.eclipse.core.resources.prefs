@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
+encoding//Peripheral/inc/ch32v00x_rcc.h=GBK
 encoding//User/command_line.c=GBK
 encoding//User/command_line.h=GBK
 encoding//User/debug2.c=GBK

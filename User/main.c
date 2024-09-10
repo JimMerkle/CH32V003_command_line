@@ -31,7 +31,7 @@ extern void USART_Printf_Init2(uint32_t baudrate); // debug2.c
 /*********************************************************************
  * @fn      GPIO_Toggle_INIT
  *
- * @brief   Initializes GPIOA.0
+ * @brief   Initializes GPIO D0 for toggle functionality
  *
  * @return  none
  */
@@ -45,6 +45,7 @@ void GPIO_Toggle_INIT(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
+
 
 /*********************************************************************
  * @fn      main
