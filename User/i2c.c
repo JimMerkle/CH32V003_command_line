@@ -144,7 +144,7 @@ int i2c_read_byte(uint8_t * data)
     I2C_ERROR rc = i2c_wait_master_receiver_mode();
     if(I2C_ERROR_SUCCESS != rc) {
         uint32_t status = I2C_GetLastEvent(I2C1);
-        printf("%s i2c_wait_master_receiver_mode() 0x%06X, %d\n",__func__, status, rc);
+        printf("%s i2c_wait_master_receiver_mode() 0x%06X, %d\r\n",__func__, status, rc);
         return rc;
     }
     // Transfer byte to buffer
@@ -277,16 +277,16 @@ int i2c_device_detect(uint16_t i2c_address)
 // 70: -- -- -- -- -- -- -- ¡ª-
 void i2c_scan(void)
 {
-    printf("     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
+    printf("     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\r\n");
     printf("00:          ");
     for(unsigned address=3; address<=0x77; address++) {
         // print row header, starting row address
-        if((address % 0x10) == 0) printf("\n%02X: ",address);
+        if((address % 0x10) == 0) printf("\r\n%02X: ",address);
         if(I2C_ERROR_SUCCESS == i2c_device_detect(address))
             printf("%02X ",address);
         else
             printf("-- ");
 
     } // for-loop
-    printf("\n");
+    printf("\r\n");
 }

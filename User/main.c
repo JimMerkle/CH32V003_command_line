@@ -61,7 +61,7 @@ int main(void)
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     Delay_Init();
     USART_Printf_Init2(115200); // Use alternate init function that includes RX pin
-    printf("SystemClk:%d\n", SystemCoreClock);
+    printf("SystemClk:%d\r\n", SystemCoreClock);
 
     //printf("IIC Host mode, 100Kbps\r\n");
     IIC_Init( 100000, I2C_SELF_ADDRESS); // 80000 creates a nice looking 80KHz, 100K looks good too

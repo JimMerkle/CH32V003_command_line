@@ -53,8 +53,8 @@ void cl_setup(void) {
     // The STM32 development environment's stdio library provides buffering of stdout stream by default.  Turn it off!
     setvbuf(stdout, NULL, _IONBF, 0);
     // Turn on yellow text, print greeting, reset attributes
-    printf("\n" COLOR_YELLOW "Command Line parser, %s" COLOR_RESET "\n",__DATE__);
-    printf(COLOR_YELLOW "Enter \"help\" or \"?\" for list of commands" COLOR_RESET "\n");
+    printf("\n" COLOR_YELLOW "Command Line parser, %s" COLOR_RESET "\r\n",__DATE__);
+    printf(COLOR_YELLOW "Enter \"help\" or \"?\" for list of commands" COLOR_RESET "\r\n");
     putchar('>'); // initial prompt
 }
 
@@ -79,10 +79,10 @@ void cl_loop(void)
           case _LF:
             buffer[index] = 0; // null terminate
             if(index) {
-                putchar(_LF); // newline
+                printf("\r\n"); // newline
                 cl_process_buffer(); // process the null terminated buffer
             }
-            printf("\n>");
+            printf("\r\n>");
             index = 0; // reset buffer index
             return;
           case _BS:
@@ -117,7 +117,7 @@ void cl_process_buffer(void)
                 // We found a match in the table
                 // Enough arguments?
                 if (argc < cmd_table[cmdIndex].arg_cnt) {
-                    printf("\r\nInvalid Arg cnt: %d Expected: %d\n", argc - 1,
+                    printf("\r\nInvalid Arg cnt: %d Expected: %d\r\n", argc - 1,
                             cmd_table[cmdIndex].arg_cnt - 1);
                     break;
                 }
@@ -195,16 +195,16 @@ int cl_help(void) {
             printf(" "); // variable space so comment fields line up
         printf("%s\r\n", cmd_table[i].comment);
     }
-    printf("\n");
+    printf("\r\n");
     return 0;
 }
 
 int cl_add(void) {
-    printf("add..  A: %s  B: %s\n", argv[1], argv[2]);
+    printf("add..  A: %s  B: %s\r\n", argv[1], argv[2]);
     int A = (int) strtol(argv[1], NULL, 0); // allow user to use decimal or hex
     int B = (int) strtol(argv[2], NULL, 0);
     int ret = A + B;
-    printf("returning %d\n\n", ret);
+    printf("returning %d\r\n\n", ret);
     return ret;
 }
 
@@ -219,7 +219,7 @@ int cl_id(void) {
     for (int i = 11; i >= 0; i--)
         printf("%02X", p_id[i]); // display bytes from high byte to low byte
 
-    printf("\n");
+    printf("\r\n");
     return 0;
 }
 
@@ -232,9 +232,8 @@ int cl_id(void) {
 int cl_info(void) {
     volatile uint16_t *p_k_bytes = (uint16_t*) FLASHSIZE_BASE; // stm32f103xb.h
     //volatile uint32_t *p_dev_id = (uint32_t*) DBGMCU_BASE; // stm32f103xb.h
-    printf("Processor FLASH: %uK bytes\n", *p_k_bytes);
-    printf("Processor RAM: 2K bytes\n"); // Built-in 2KB SRAM, starting address 0x20000000")
-    //printf("Processor ID Code: 0x%08lX\n", *p_dev_id);
+    printf("Processor FLASH: %uK bytes\r\n", *p_k_bytes);
+    printf("Processor RAM: 2K bytes\r\n"); // Built-in 2KB SRAM, starting address 0x20000000")
     return 0;
 }
 
@@ -247,7 +246,7 @@ int cl_read(void)
     char *endptr;
     uint32_t address = (uint32_t) strtol(argv[1], &endptr, 16); // allow user to use decimal or hex
     if (endptr == argv[1]) {
-        printf("Invalid hex address\n");
+        printf("Invalid hex address\r\n");
         return 1;
     }
     uint32_t value = *(uint32_t *)address;
@@ -259,33 +258,33 @@ int cl_read(void)
 // Display values of clock control registers
 int cl_clocks(void)
 {
-    printf(COLOR_GREEN "RCC->CTLR : %08X" COLOR_RESET "\n",RCC->CTLR);
-    if(RCC->CTLR & RCC_PLLRDY)  printf("PLL clock ready\n");
-    if(RCC->CTLR & RCC_PLLON)   printf("PLL enable\n");
-    if(RCC->CTLR & RCC_CSSON)   printf("Clock Security System enable\n");
-    if(RCC->CTLR & RCC_HSEBYP)  printf("HSE bypass\n");
-    if(RCC->CTLR & RCC_HSERDY)  printf("HSE ready\n");
-    if(RCC->CTLR & RCC_HSEON)   printf("HSE enable\n");
+    printf(COLOR_GREEN "RCC->CTLR : %08X" COLOR_RESET "\r\n",RCC->CTLR);
+    if(RCC->CTLR & RCC_PLLRDY)  printf("PLL clock ready\r\n");
+    if(RCC->CTLR & RCC_PLLON)   printf("PLL enable\r\n");
+    if(RCC->CTLR & RCC_CSSON)   printf("Clock Security System enable\r\n");
+    if(RCC->CTLR & RCC_HSEBYP)  printf("HSE bypass\r\n");
+    if(RCC->CTLR & RCC_HSERDY)  printf("HSE ready\r\n");
+    if(RCC->CTLR & RCC_HSEON)   printf("HSE enable\r\n");
 
     uint32_t hsical = RCC->CTLR & RCC_HSICAL;
     if(hsical){
         hsical >>= 8;
-        printf("HSI CAL: %02X\n",hsical); }
+        printf("HSI CAL: %02X\r\n",hsical); }
 
     uint32_t hsitrim = RCC->CTLR & RCC_HSITRIM;
         if(hsitrim){
             hsitrim >>= 3;
-            printf("HSI TRIM: %02X\n",hsitrim); }
+            printf("HSI TRIM: %02X\r\n",hsitrim); }
 
-    if(RCC->CTLR & RCC_HSIRDY)  printf("HSI ready\n");
-    if(RCC->CTLR & RCC_HSION)   printf("HSI enable\n");
+    if(RCC->CTLR & RCC_HSIRDY)  printf("HSI ready\r\n");
+    if(RCC->CTLR & RCC_HSION)   printf("HSI enable\r\n");
 
-    printf(COLOR_GREEN "RCC->CFGR0: %08X" COLOR_RESET "\n",RCC->CFGR0);
+    printf(COLOR_GREEN "RCC->CFGR0: %08X" COLOR_RESET "\r\n",RCC->CFGR0);
     uint32_t sws = RCC->CFGR0 & RCC_SWS;
     printf("System clock: ");
-    if(RCC_SWS_HSI == sws ) printf("HSI\n");
-    if(RCC_SWS_HSE == sws ) printf("HSE\n");
-    if(RCC_SWS_PLL == sws ) printf("PLL\n");
+    if(RCC_SWS_HSI == sws ) printf("HSI\r\n");
+    if(RCC_SWS_HSE == sws ) printf("HSE\r\n");
+    if(RCC_SWS_PLL == sws ) printf("PLL\r\n");
 
     return 0;
 }
@@ -300,7 +299,7 @@ int cl_clocks(void)
 //[15:8] Reserved RO Reserved 0
 //7 RESETSYS WO System reset
 int cl_reset(void) {
-    printf("%s\n",__func__);
+    printf("%s\r\n",__func__);
     Delay_Ms(10);
     PFIC->CFGR = NVIC_KEY3 | 0x80;
     return 0;
@@ -317,12 +316,12 @@ int cl_reset(void) {
 int cl_reset_cause(void)
 {
     printf("Reset cause: ");
-    if(RCC->RSTSCKR & RCC_LPWRRSTF) printf("LPWRRSTF\n");
-    if(RCC->RSTSCKR & RCC_WWDGRSTF) printf("WWDGRSTF\n");
-    if(RCC->RSTSCKR & RCC_IWDGRSTF) printf("IWDGRSTF\n");
-    if(RCC->RSTSCKR & RCC_SFTRSTF)  printf("SFTRSTF\n");
-    if(RCC->RSTSCKR & RCC_PORRSTF)  printf("PORRSTF\n");
-    if(RCC->RSTSCKR & RCC_PINRSTF)  printf("PINRSTF\n");
+    if(RCC->RSTSCKR & RCC_LPWRRSTF) printf("LPWRRSTF\r\n");
+    if(RCC->RSTSCKR & RCC_WWDGRSTF) printf("WWDGRSTF\r\n");
+    if(RCC->RSTSCKR & RCC_IWDGRSTF) printf("IWDGRSTF\r\n");
+    if(RCC->RSTSCKR & RCC_SFTRSTF)  printf("SFTRSTF\r\n");
+    if(RCC->RSTSCKR & RCC_PORRSTF)  printf("PORRSTF\r\n");
+    if(RCC->RSTSCKR & RCC_PINRSTF)  printf("PINRSTF\r\n");
 
     // Clear reset flags for next time
     RCC->RSTSCKR |= RCC_RMVF;
@@ -401,15 +400,15 @@ int cl_servo(void)
 {
     // Initialize PWM for 50Hz (20ms period) 0.8ms high PWM
     TIM1_PWMOut_Init( 20000, 48-1, 800); // 0.8ms (1us units for ccp)
-    printf("TIM1->CH1CVR: %u\n",TIM1->CH1CVR);
+    printf("TIM1->CH1CVR: %u\r\n",TIM1->CH1CVR);
     Delay_Ms(2000);
 
     TIM1->CH1CVR = 1500; // 1.5ms
-    printf("TIM1->CH1CVR: %u\n",TIM1->CH1CVR);
+    printf("TIM1->CH1CVR: %u\r\n",TIM1->CH1CVR);
     Delay_Ms(2000);
 
     TIM1->CH1CVR = 2200; // 2.2ms
-    printf("TIM1->CH1CVR: %u\n",TIM1->CH1CVR);
+    printf("TIM1->CH1CVR: %u\r\n",TIM1->CH1CVR);
     //Delay_Ms(2000);
     return 0;
 }
@@ -427,10 +426,10 @@ int cl_i2cscan(void)
 int cl_ds3231_temperature(void)
 {
     if(I2C_ERROR_SUCCESS != i2c_device_detect(I2C_ADDRESS_DS3231)) {
-        printf("DS3231 Not Found !\n");
+        printf("DS3231 Not Found !\r\n");
         return I2C_ERROR_ACK;
     }
-    printf("%s, Continuously read DS3231 temperature until reset\n",__func__);
+    printf("%s, Continuously read DS3231 temperature until reset\r\n",__func__);
     while(1) {
         // Force a temperature conversion, write 0x3C to control register, 0x0E (set CONV bit, BIT5)
         uint8_t reg=0x0E;
@@ -448,7 +447,7 @@ int cl_ds3231_temperature(void)
         int16_t temp_c = (int16_t)u_temp_c;
         //printf("u_temp_c: %04X\n",u_temp_c);
         temp_c /= 64; // convert to 1/4 degree C units
-        printf("Temp: %d %d/4C\n",temp_c/4,temp_c%4); // This display method only works for positive temperature values
+        printf("Temp: %d %d/4C\r\n",temp_c/4,temp_c%4); // This display method only works for positive temperature values
 
         // Convert to Fahrenheit
         //int16_t temp_f = (((int16_t)temp_msb * 18) / 10) + 32 ; // multiply by 1.8, add 32
